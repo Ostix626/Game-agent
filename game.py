@@ -52,17 +52,18 @@ def collision_check(obstacles):
     return 1
 
 def main_menu():
-    score_text = text_font.render(f'SCORE: {int(score)}', True, (233, 244, 246))  #(145, 86, 59)
-    score_rect = score_text.get_rect(center = (512,730))
-    screen.blit(score_text, score_rect)
-    score_text = text_font.render('PRESS SPACE TO PLAY!', True, (233, 244, 246))
+    if score > 0:
+        score_text = text_font.render(f'SCORE: {int(score)}', True, (235, 247, 247)) 
+        score_rect = score_text.get_rect(center = (512,730))
+        screen.blit(score_text, score_rect)
+    score_text = text_font.render('PRESS SPACE TO PLAY!', True, (235, 247, 247))
     score_rect = score_text.get_rect(center=(512, 800))
     screen.blit(score_text, score_rect)
     chicken_rect = chicken.get_rect(center=(100, 900))
     screen.blit(chicken, chicken_rect)
 
 def real_time_score():
-    score_text = text_font.render(str(score), True, (233, 244, 246))
+    score_text = text_font.render(str(score), True, (235, 247, 247))
     score_rect = score_text.get_rect(center=(512, 800))
     screen.blit(score_text, score_rect)
 
@@ -129,6 +130,9 @@ while True:
                 chicken_flying = -10    #koliko poleti
             if event.key == pygame.K_SPACE and game_active < 1:
                 restart_game()
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                sys.exit()
         if event.type == SPAWNER:
             obstacle_list.extend(create_obstacle())
         if event.type == WINGFLAP:
