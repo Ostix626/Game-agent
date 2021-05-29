@@ -1,13 +1,14 @@
 import pygame, sys, random, time
 
 def restart_game():
-    global game_active, chicken_flying, score, jump
+    global game_active, chicken_flying, score, jump, scoring
     start_sound.play()
     game_active = 1
     obstacle_list.clear()
     chicken_rect.center = (100, 500)
     chicken_flying = jump
     score = 0
+    scoring = True
 
 def grass_floor():
     floor_y = 920
@@ -67,6 +68,17 @@ def real_time_score():
     score_rect = score_text.get_rect(center=(512, 800))
     screen.blit(score_text, score_rect)
 
+def score_check():
+    global score, scoring
+    if obstacle_list:
+        for obstacle in obstacle_list:
+            if 100 < obstacle.centerx < 115 and scoring:
+                score += 1
+                scoring = False
+            if obstacle.centerx < 0:
+                scoring = True
+
+
 
 
 #pygame.mixer.pre_init(frequency=44100, size=16, channels=2, buffer=4096)
@@ -81,6 +93,7 @@ jump = -1050
 chicken_flying = 0
 game_active = -1  # -1=intro , 0=ded , 1=ingame
 score = 0
+scoring = True
 #pozadina
 bg = pygame.image.load('assets/skyBG.png').convert()
 grass = pygame.image.load('assets/grass.png').convert()
@@ -159,8 +172,9 @@ while True:
 
         game_active = collision_check(obstacle_list)
 
+        score_check()
         real_time_score()
-        score += 1
+        # score += 1
 
         obstacle_list = move_obstacle(obstacle_list)
         show_obstacles(obstacle_list)
