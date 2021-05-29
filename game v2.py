@@ -1,12 +1,12 @@
-import pygame, sys, random
+import pygame, sys, random, time
 
 def restart_game():
-    global game_active, chicken_flying, score
+    global game_active, chicken_flying, score, jump
     start_sound.play()
     game_active = 1
     obstacle_list.clear()
     chicken_rect.center = (100, 500)
-    chicken_flying = -10
+    chicken_flying = jump
     score = 0
 
 def grass_floor():
@@ -19,8 +19,8 @@ def lava_floor():
     screen.blit(the_floor_is_lava, (x_os, lava_y))
     screen.blit(the_floor_is_lava, (x_os + 1024, lava_y))
 
-def rotate_chicken(chicken):
-    return pygame.transform.rotozoom(chicken, -chicken_flying * 4, 1)
+def rotate_chicken(chicken, delta):
+    return pygame.transform.rotozoom(chicken, -chicken_flying * 3 * delta, 1)
 
 def create_obstacle():
     pos_y = 320 + 580 * random.random()
@@ -30,7 +30,7 @@ def create_obstacle():
 
 def move_obstacle(obstacles):
     for obs in obstacles:
-        obs.centerx -= 5  #moving speed
+        obs.centerx -= 600 * delta  #moving speed
     return [obs for obs in obstacles if obs.right > -20]  #ne vraca prepreke koje nisu na ekranu
 
 def show_obstacles(obstacles):
@@ -53,7 +53,7 @@ def collision_check(obstacles):
 
 def main_menu():
     if score > 0:
-        score_text = text_font.render(f'SCORE: {int(score)}', True, (235, 247, 247))
+        score_text = text_font.render(f'SCORE: {int(score)}', True, (235, 247, 247)) 
         score_rect = score_text.get_rect(center = (512,730))
         screen.blit(score_text, score_rect)
     score_text = text_font.render('PRESS SPACE TO PLAY!', True, (235, 247, 247))
@@ -76,7 +76,8 @@ clock = pygame.time.Clock()
 text_font = pygame.font.Font('assets/font/04B_30__.TTF', 50)
 
 #ingame vars
-gravity = 0.25
+gravity = 3200
+jump = -1050
 chicken_flying = 0
 game_active = -1  # -1=intro , 0=ded , 1=ingame
 score = 0
@@ -117,27 +118,21 @@ start_sound = pygame.mixer.Sound('assets/sounds/start.wav')
 
 
 intro_game_sound.play()
+curTime = time.perf_counter()
+lastTime = curTime
 while True:
+    curTime = time.perf_counter()
+    delta = curTime - lastTime
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if pygame.mouse.get_pressed()[0] == True and game_active == 1:
-                fly_sound_list[fly_sound_index].play()
-                fly_sound_index += 1
-                if fly_sound_index == 4: fly_sound_index = 0
-                chicken_flying = -10  # koliko poleti
-            if pygame.mouse.get_pressed()[0] == True and game_active < 1:
-                restart_game()
-
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and game_active == 1:
                 fly_sound_list[fly_sound_index].play()
                 fly_sound_index += 1
                 if fly_sound_index == 4: fly_sound_index = 0
-                chicken_flying = -10    #koliko poleti
+                chicken_flying = jump    #koliko poleti
             if event.key == pygame.K_SPACE and game_active < 1:
                 restart_game()
             if event.key == pygame.K_ESCAPE:
@@ -153,12 +148,12 @@ while True:
     #mirna pozadina: screen.blit(bg, (0,0))
     screen.blit(bg, (x_os, 0))
     screen.blit(bg, (x_os + 1024, 0))
-
+	
     if game_active == 1:
         #kretanje kokosi
-        chicken_flying += gravity
-        rotated_chicken = rotate_chicken(chicken)
-        chicken_rect.centery += chicken_flying
+        chicken_flying += gravity * delta
+        rotated_chicken = rotate_chicken(chicken, delta)
+        chicken_rect.centery += chicken_flying * delta
         #screen.blit(chicken, chicken_rect)   #mirna kokos
         screen.blit(rotated_chicken, chicken_rect)  #rotirajuca kokos
 
@@ -170,19 +165,20 @@ while True:
         obstacle_list = move_obstacle(obstacle_list)
         show_obstacles(obstacle_list)
     elif game_active == 0:
-        chicken_flying += gravity
-        chicken_rect.centery += chicken_flying
+        chicken_flying += gravity * delta
+        chicken_rect.centery += chicken_flying * delta
         screen.blit(dead_chicken, chicken_rect)
         main_menu()
     elif game_active == -1:
         main_menu()
 
     #kretanje pozadine
-    x_os -= 1
+    x_os -= 2
     if (x_os < -1024): x_os = 0
     grass_floor()
     #lava_floor()
 
     pygame.display.update()
-    clock.tick(120) #fps
+    lastTime = curTime
+    clock.tick(60) #fps
 
